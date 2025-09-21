@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane prefHeight="960.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="elo.elo_gui.MainController">
+   <children>
+       <VBox fx:id="leftPanel" alignment="CENTER" prefHeight="950.0" prefWidth="300.0" spacing="20.0" xmlns:fx="http://javafx.com/fxml">
+           <padding>
+               <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+           </padding>
+
+           <Label fx:id="playerListLabel" text="Balanced team generator" />
+         <HBox alignment="CENTER_LEFT" prefHeight="5.0" prefWidth="200.0">
+            <children>
+                 <Button fx:id="sheetBrowserButton" onAction="#onSelectSourceClick" text="Select source sheet" />
+               <Label fx:id="loadedFile" alignment="CENTER_RIGHT" textAlignment="CENTER">
+                  <HBox.margin>
+                     <Insets left="10.0" />
+                  </HBox.margin>
+               </Label>
+            </children>
+         </HBox>
+         <Button fx:id="loadPlayersButton" disable="true" onAction="#onLoadPlayersClick" text="Load players" />
+         <Button fx:id="checkTable" disable="true" mnemonicParsing="false" onAction="#onCheckTableClick" text="Check table" />
+         <ScrollPane fx:id="loadedPlayerListPane" prefHeight="736.0" prefWidth="292.0">
+           <content>
+             <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="768.0" prefWidth="279.0">
+                  <children>
+                      <TableView fx:id="playerTable" editable="true" prefHeight="770.0" prefWidth="260.0">
+                       <columns>
+                           <TableColumn fx:id="discordName" maxWidth="170.0" prefWidth="170.0" resizable="false" text="Discord name" />
+                           <TableColumn fx:id="elo" maxWidth="60.0" prefWidth="60.0" resizable="false" text="ELO" />
+                       </columns>
+                     </TableView>
+                  </children></AnchorPane>
+           </content>
+         </ScrollPane>
+       </VBox>
+      <Pane layoutX="300.0" layoutY="13.0" prefHeight="925.0" prefWidth="961.0">
+         <children>
+            <VBox prefHeight="150.0" prefWidth="300.0">
+               <children>
+                  <HBox alignment="CENTER_RIGHT" prefHeight="50.0" prefWidth="200.0">
+                     <children>
+                        <Label text="Iterations: " />
+                        <TextField fx:id="iterationCount" text="1000000" />
+                     </children>
+                     <opaqueInsets>
+                        <Insets />
+                     </opaqueInsets>
+                     <VBox.margin>
+                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                     </VBox.margin>
+                  </HBox>
+                  <HBox alignment="CENTER_RIGHT" layoutX="10.0" layoutY="10.0" prefHeight="50.0" prefWidth="200.0">
+                     <children>
+                        <Label text="Option count: " />
+                        <TextField fx:id="optionCount" text="3" />
+                     </children>
+                     <opaqueInsets>
+                        <Insets />
+                     </opaqueInsets>
+                     <VBox.margin>
+                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                     </VBox.margin>
+                  </HBox>
+                  <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0">
+                     <children>
+                        <Button fx:id="generate" disable="true" mnemonicParsing="false" onAction="#onGenerateTeamsClick" text="Generate teams" />
+                     </children>
+                     <VBox.margin>
+                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                     </VBox.margin>
+                     <opaqueInsets>
+                        <Insets />
+                     </opaqueInsets>
+                  </HBox>
+               </children>
+               <padding>
+                  <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+               </padding>
+            </VBox>
+            <TextArea editable="false" layoutX="300.0" layoutY="14.0" prefHeight="175.0" prefWidth="638.0" text="1) Click - Select source sheet. (expected columns - &quot;Discord Nickname&quot; and &quot;Faceit Elo&quot;)&#10;2) Click - Load players.&#10;3) If table has any red rows - doubleclick elo value and update manually, must have only digits&#10;4) Click - Check table to validate elo values.&#10;5) Click - Generate teams (repeat as much as you want)&#10;6) Enjoy the game" />
+            <TextArea fx:id="output" layoutX="14.0" layoutY="210.0" prefHeight="708.0" prefWidth="940.0" />
+            <ProgressBar fx:id="progressBar" layoutX="14.0" layoutY="166.0" prefHeight="18.0" prefWidth="280.0" progress="0.0" />
+         </children>
+      </Pane>
+   </children>
+</AnchorPane>
