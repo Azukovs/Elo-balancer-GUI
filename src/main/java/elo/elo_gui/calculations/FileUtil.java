@@ -53,7 +53,7 @@ public class FileUtil {
             }
 
             PlayerInputData inputPlayer = PlayerInputData.builder()
-                    .discordName(row.getCell(dcNameIndex).getStringCellValue())
+                    .discordName(formatter.formatCellValue(row.getCell(dcNameIndex)))
                     .currentFaceit(formatter.formatCellValue(row.getCell(currentFaceitEloIndex)))
                     .build();
 
@@ -83,8 +83,9 @@ public class FileUtil {
                 outputData.append("\nOptimized Teams (Faceit diff = ").append(scoreTeams(option)).append("):\n");
                 int num = 1;
                 for (Team team : option) {
-                    outputWriter.write("Team " + num++ + " - " + team.toString() + "\n");
-                    outputData.append("Team ").append(num++).append(" - ").append(team).append("\n");
+                    outputWriter.write("Team " + num + " - " + team.toString() + "\n");
+                    outputData.append("Team ").append(num).append(" - ").append(team).append("\n");
+                    num++;
                 }
             }
 

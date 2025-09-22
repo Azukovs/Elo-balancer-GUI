@@ -10,7 +10,16 @@ import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.Background;
@@ -26,7 +35,8 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static elo.elo_gui.calculations.FileUtil.*;
+import static elo.elo_gui.calculations.FileUtil.loadPlayersInput;
+import static elo.elo_gui.calculations.FileUtil.outputTeams;
 import static java.lang.Integer.parseInt;
 import static java.util.Comparator.comparingInt;
 
@@ -69,14 +79,28 @@ public class MainController {
         FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Sheet (*.xlsx)", "*.xlsx");
         fileChooser.getExtensionFilters().add(extFilter);
         inputFile = fileChooser.showOpenDialog(sheetBrowserButton.getScene().getWindow());
-        loadedFile.setText(inputFile.getName());
-        loadPlayersButton.setDisable(false);
+        if (inputFile != null) {
+            loadedFile.setText(inputFile.getName());
+            loadPlayersButton.setDisable(false);
+            checkTable.setDisable(true);
+            playerTable.getItems().clear();
+            output.setText("");
+            players.clear();
+            reserve.clear();
+            progressBar.setProgress(0.0);
+        } else {
+            loadPlayersButton.setDisable(true);
+            loadedFile.setText("");
+        }
     }
 
     @FXML
     protected void onLoadPlayersClick() throws FileNotFoundException {
+        if (inputFile == null) {
+            loadPlayersButton.setDisable(true);
+            return;
+        }
         System.out.println("Clicked load players");
-        sheetBrowserButton.setDisable(true);
         List<PlayerInputData> players = new ArrayList<>();
         List<PlayerInputData> reserve = new ArrayList<>();
         loadPlayersInput(players, reserve, new FileInputStream(inputFile));
@@ -84,20 +108,20 @@ public class MainController {
         checkTable.setDisable(false);
         discordName.setCellValueFactory(new PropertyValueFactory<>("discordName"));
         elo.setCellValueFactory(new PropertyValueFactory<>("currentFaceit"));
-
         elo.setCellFactory(TextFieldTableCell.forTableColumn());
+
         elo.setOnEditCommit((EventHandler<TableColumn.CellEditEvent>) event -> {
-            Object elo = event
+            PlayerInputData elo = (PlayerInputData) event
                     .getTableView()
                     .getItems()
                     .get(event.getTablePosition().getRow());
-            ((PlayerInputData) elo).setCurrentFaceit((String) event.getNewValue());
+            elo.setCurrentFaceit(String.valueOf(event.getNewValue()));
         });
 
         playerTable.setRowFactory(new Callback<TableView<PlayerInputData>, TableRow<PlayerInputData>>() {
             @Override
             public TableRow<PlayerInputData> call(TableView<PlayerInputData> tableView) {
-                final TableRow<PlayerInputData> row = new TableRow<PlayerInputData>() {
+                final TableRow<PlayerInputData> row = new TableRow<>() {
 
                     @Override
                     protected void updateItem(PlayerInputData item, boolean empty) {
@@ -114,11 +138,10 @@ public class MainController {
                         } catch (NumberFormatException e) {
                             failed = true;
                         }
-                        this.setBackground(new Background(new BackgroundFill(
-                                failed ? bad : good, CornerRadii.EMPTY, Insets.EMPTY
-                        )));
+                        this.setBackground(new Background(new BackgroundFill(failed ? bad : good, CornerRadii.EMPTY, Insets.EMPTY)));
                     }
                 };
+                System.out.println("Updated row");
                 return row;
             }
         });
@@ -156,10 +179,7 @@ public class MainController {
         List<Player> temporary = new ArrayList<>();
         ObservableList<PlayerInputData> items = playerTable.getItems();
         for (PlayerInputData item : items) {
-            temporary.add(Player.builder()
-                    .discordName(item.getDiscordName())
-                    .currentFaceit(parseInt(item.getCurrentFaceit()))
-                    .build());
+            temporary.add(Player.builder().discordName(item.getDiscordName()).currentFaceit(parseInt(item.getCurrentFaceit())).build());
         }
 
         List<Player> reservePlayers = new ArrayList<>();
