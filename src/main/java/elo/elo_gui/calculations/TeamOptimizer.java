@@ -3,7 +3,9 @@ package elo.elo_gui.calculations;
 import elo.elo_gui.calculations.dtos.Player;
 import elo.elo_gui.calculations.dtos.Team;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 import static java.util.Comparator.comparingInt;
 
@@ -12,6 +14,7 @@ public class TeamOptimizer {
 
     public static List<Team> calculateSingle(List<Player> players, int iterations) {
         List<Team> initialTeams = greedyInitialize(players, TEAM_SIZE);
+        System.out.println();
         List<Team> optimized = optimize(initialTeams, iterations);
         optimized.sort(comparingInt(Team::totalFaceit));
         return optimized;
@@ -28,11 +31,22 @@ public class TeamOptimizer {
         players.sort(comparingInt((Player player) -> -player.getCurrentFaceit())
                 .thenComparingInt(player -> -player.getCurrentPremiere()));
 
+        List<Player> teammates = new ArrayList<>();
         for (Player player : players) {
+            if (teammates.contains(player)) {
+                continue;
+            }
             Team bestTeam = teams.stream()
                     .filter(team -> team.players.size() < teamSize)
                     .min(comparingInt(Team::totalFaceit))
                     .orElseThrow();
+
+            List<Player> currentPlayerTeammates = player.getTeammates();
+            if (currentPlayerTeammates != null && !currentPlayerTeammates.isEmpty()) {
+                teammates.addAll(currentPlayerTeammates);
+                currentPlayerTeammates.forEach(bestTeam::addPlayer);
+            }
+
             bestTeam.addPlayer(player);
         }
 
@@ -68,15 +82,43 @@ public class TeamOptimizer {
             Player player1 = team1.players.get(rand.nextInt(team1.players.size()));
             Player player2 = team2.players.get(rand.nextInt(team2.players.size()));
 
-            team1.removePlayer(player1);
-            team2.removePlayer(player2);
-            team1.addPlayer(player2);
-            team2.addPlayer(player1);
+            List<Player> p1Teammates = player1.getTeammates();
+            List<Player> p2Teammates = player2.getTeammates();
 
-            int score = scoreTeams(current);
-            if (score < bestScore) {
-                best = current;
-                bestScore = score;
+            boolean performSwap = true;
+            for (Player t1Player : team1.players) {
+                for (Player adversary : t1Player.getAdversaries()) {
+                    if (adversary.getDiscordName().equals(player2.getDiscordName())) {
+//                        System.out.println("Skipping swap because target team has an adversary.");
+                        performSwap = false;
+                    }
+                }
+            }
+            for (Player t2Player : team2.players) {
+                for (Player adversary : t2Player.getAdversaries()) {
+                    if (adversary.getDiscordName().equals(player1.getDiscordName())) {
+//                        System.out.println("Skipping swap because target team has an adversary.");
+                        performSwap = false;
+                    }
+                }
+            }
+
+            if ((p1Teammates != null && !p1Teammates.isEmpty()) || (p2Teammates != null && !p2Teammates.isEmpty())) {
+//                System.out.println("Skipping swap because of teammates");
+                performSwap = false;
+            }
+
+            if (performSwap) {
+                team1.removePlayer(player1);
+                team2.removePlayer(player2);
+                team1.addPlayer(player2);
+                team2.addPlayer(player1);
+
+                int score = scoreTeams(current);
+                if (score < bestScore) {
+                    best = current;
+                    bestScore = score;
+                }
             }
         }
 

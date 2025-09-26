@@ -42,7 +42,7 @@ public class Team implements Comparable<Team> {
     @Override
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("(").append(faceitEloSum / 5).append(") ");
+        stringBuilder.append("AVG(").append(faceitEloSum / 5).append(")/TOT(").append(faceitEloSum).append(") ");
         for (int i = 0; i < players.size(); i++) {
             Player p = players.get(i);
             stringBuilder.append(p.toString());

@@ -3,10 +3,17 @@ package elo.elo_gui.calculations;
 import elo.elo_gui.calculations.dtos.Player;
 import elo.elo_gui.calculations.dtos.PlayerInputData;
 import elo.elo_gui.calculations.dtos.Team;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,10 +59,10 @@ public class FileUtil {
                 continue;
             }
 
-            PlayerInputData inputPlayer = PlayerInputData.builder()
-                    .discordName(formatter.formatCellValue(row.getCell(dcNameIndex)))
-                    .currentFaceit(formatter.formatCellValue(row.getCell(currentFaceitEloIndex)))
-                    .build();
+            String nameInSheet = formatter.formatCellValue(row.getCell(dcNameIndex));
+            String eloInSheet = formatter.formatCellValue(row.getCell(currentFaceitEloIndex));
+
+            PlayerInputData inputPlayer = new PlayerInputData(nameInSheet, eloInSheet);
 
             playerList.add(inputPlayer);
             rowIndex++;
@@ -79,8 +86,9 @@ public class FileUtil {
             File output = new File("teams.txt");
             for (int i = 0; i < outputNumber; i++) {
                 List<Team> option = potentialTeams.get(i);
-                outputWriter.write("\nOptimized Teams (Faceit diff = " + scoreTeams(option) + "):\n");
-                outputData.append("\nOptimized Teams (Faceit diff = ").append(scoreTeams(option)).append("):\n");
+                int faceitDiff = scoreTeams(option);
+                outputWriter.write("\nOptimized Teams (Faceit diff = " + faceitDiff + "):\n");
+                outputData.append("\nOptimized Teams (Faceit diff = ").append(faceitDiff).append("):\n");
                 int num = 1;
                 for (Team team : option) {
                     outputWriter.write("Team " + num + " - " + team.toString() + "\n");
