@@ -15,14 +15,41 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import static elo.elo_gui.calculations.TeamName.getByNumber;
 import static elo.elo_gui.calculations.TeamOptimizer.scoreTeams;
 
 public class FileUtil {
-    public static void loadPlayersInput(List<PlayerInputData> providedPlayers, List<PlayerInputData> providedReserve, FileInputStream input) {
-        int dcNameIndex = 0;
-        int currentFaceitEloIndex = 0;
+    public static Map<String, Integer> headerMap = new HashMap<>();
+    public static String nameColumnHeader = "Discord Nickname";
+    public static String eloColumnHeader = "Faceit Elo";
+
+    public static List<String> getHeaderNames(FileInputStream input) {
+        List<String> headers = new ArrayList<>();
+        Workbook workbook;
+        try {
+            workbook = new XSSFWorkbook(input);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        Sheet sheet = workbook.getSheetAt(0);
+        int index = 0;
+        for (Cell headerCell : sheet.getRow(0)) {
+            headers.add(headerCell.getStringCellValue());
+            headerMap.put(headerCell.getStringCellValue(), index);
+            index++;
+        }
+
+        return headers;
+    }
+
+    public static int loadPlayersInput(List<PlayerInputData> providedPlayers, FileInputStream input) {
+        int dcNameIndex = -1;
+        int currentFaceitEloIndex = -1;
 
         List<PlayerInputData> playerList = new ArrayList<>();
 
@@ -37,18 +64,17 @@ public class FileUtil {
         Sheet sheet = workbook.getSheetAt(0);
         int index = 0;
         for (Cell headerCell : sheet.getRow(0)) {
-            switch (headerCell.getStringCellValue()) {
-                case "Discord Nickname":
-                    dcNameIndex = index;
-                    break;
-                case "Faceit Elo":
-                    currentFaceitEloIndex = index;
-                    break;
+            String stringCellValue = headerCell.getStringCellValue();
+            if (stringCellValue.equals(nameColumnHeader)) {
+                dcNameIndex = index;
+            } else if (stringCellValue.equals(eloColumnHeader)) {
+                currentFaceitEloIndex = index;
             }
             index++;
         }
 
         int rowIndex = 0;
+        int longestName = 0;
         for (Row row : sheet) {
             if (rowIndex == 0) {    //skipping headers
                 rowIndex++;
@@ -62,25 +88,23 @@ public class FileUtil {
             String nameInSheet = formatter.formatCellValue(row.getCell(dcNameIndex));
             String eloInSheet = formatter.formatCellValue(row.getCell(currentFaceitEloIndex));
 
+            if (nameInSheet.length() > longestName) {
+                longestName = nameInSheet.length();
+            }
+
             PlayerInputData inputPlayer = new PlayerInputData(nameInSheet, eloInSheet);
 
             playerList.add(inputPlayer);
             rowIndex++;
         }
 
-        List<PlayerInputData> reservePlayers = new ArrayList<>();
-        for (int i = 0; i <= playerList.size() % 5; i++) {
-            PlayerInputData reservePlayer = playerList.getLast();
-            reservePlayers.add(reservePlayer);
-            playerList.remove(reservePlayer);
-        }
-
         providedPlayers.addAll(playerList);
-        providedReserve.addAll(reservePlayers);
+        return longestName;
     }
 
     public static String outputTeams(List<List<Team>> potentialTeams, List<Player> reserve, int outputNumber) {
         StringBuilder outputData = new StringBuilder();
+        String teamPattern = "%1$8s";
 
         try (FileWriter outputWriter = new FileWriter("teams.txt")) {
             File output = new File("teams.txt");
@@ -91,8 +115,8 @@ public class FileUtil {
                 outputData.append("\nOptimized Teams (Faceit diff = ").append(faceitDiff).append("):\n");
                 int num = 1;
                 for (Team team : option) {
-                    outputWriter.write("Team " + num + " - " + team.toString() + "\n");
-                    outputData.append("Team ").append(num).append(" - ").append(team).append("\n");
+                    outputWriter.write(String.format(teamPattern, getByNumber(num)) + team.toString() + "\n");
+                    outputData.append(String.format(teamPattern, getByNumber(num))).append(team).append("\n");
                     num++;
                 }
             }

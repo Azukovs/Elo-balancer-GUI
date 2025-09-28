@@ -6,6 +6,7 @@ import elo.elo_gui.calculations.dtos.PlayerConnection;
 import elo.elo_gui.calculations.dtos.PlayerInputData;
 import elo.elo_gui.calculations.dtos.Team;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -29,6 +30,7 @@ import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -44,17 +46,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static elo.elo_gui.calculations.FileUtil.loadPlayersInput;
-import static elo.elo_gui.calculations.FileUtil.outputTeams;
+import static elo.elo_gui.calculations.FileUtil.*;
 import static java.lang.Integer.parseInt;
 import static java.util.Comparator.comparingInt;
 import static javafx.scene.control.Alert.AlertType.ERROR;
 import static javafx.scene.control.Alert.AlertType.INFORMATION;
 
 public class MainController {
-    File inputFile;
+    public static File inputFile;
     List<Player> players = new ArrayList<>();
     List<Player> reserve = new ArrayList<>();
+    public static int longestName;
 
     @FXML
     private Button sheetBrowserButton;
@@ -62,6 +64,8 @@ public class MainController {
     private Label loadedFile;
     @FXML
     private Button loadPlayersButton;
+    @FXML
+    private Button setColumns;
     @FXML
     private Button checkTable;
     @FXML
@@ -113,6 +117,7 @@ public class MainController {
             loadedFile.setText(inputFile.getName());
             loadPlayersButton.setDisable(false);
             checkTable.setDisable(true);
+            setColumns.setDisable(false);
             playerTable.getItems().clear();
             outputTextArea.setText("");
             players.clear();
@@ -130,16 +135,19 @@ public class MainController {
     }
 
     @FXML
-    protected void onLoadPlayersClick() throws FileNotFoundException {
+    public void onLoadPlayersClick() {
         if (inputFile == null) {
             loadPlayersButton.setDisable(true);
             return;
         }
         PlayerInputData.counterTotal = 0;
         System.out.println("Clicked load players");
-        List<PlayerInputData> players = new ArrayList<>();
-        List<PlayerInputData> reserve = new ArrayList<>();
-        loadPlayersInput(players, reserve, new FileInputStream(inputFile));
+        List<PlayerInputData> playersInputData = new ArrayList<>();
+        try {
+            longestName = loadPlayersInput(playersInputData, new FileInputStream(inputFile));
+        } catch (FileNotFoundException e) {
+            System.out.println("Failed to load input file");
+        }
         playerTable.getItems().clear();
         checkTable.setDisable(false);
         discordNameColumn.setCellValueFactory(new PropertyValueFactory<>("discordName"));
@@ -182,10 +190,9 @@ public class MainController {
             }
         });
 
-        players.forEach(player -> {
+        playersInputData.forEach(player -> {
             playerTable.getItems().add(player);
         });
-        reserve.forEach(player -> playerTable.getItems().add(player));
     }
 
     @FXML
@@ -201,9 +208,9 @@ public class MainController {
             }
         }
         new Alert(INFORMATION, "Table valid.").showAndWait();
-        playerTable.setEditable(false);
         generateButton.setDisable(false);
         checkTable.setDisable(true);
+        setColumns.setDisable(true);
         loadPlayersButton.setDisable(true);
         addTeammatesButton.setDisable(false);
         addTeamSeparationButton.setDisable(false);
@@ -213,6 +220,7 @@ public class MainController {
     protected void onGenerateTeamsClick() {
         System.out.println("Clicked generate");
         outputTextArea.setText("");
+        outputTextArea.setFont(Font.font("Courier New", 12.0));
         players.clear();
         reserve.clear();
         progressBar.setProgress(0.0);
@@ -227,10 +235,13 @@ public class MainController {
         }
 
         List<Player> reservePlayers = new ArrayList<>();
-        for (int i = 0; i <= temporary.size() % 5; i++) {
-            Player reservePlayer = temporary.getLast();
-            reservePlayers.add(reservePlayer);
-            temporary.remove(reservePlayer);
+        int reserveCount = temporary.size() % 5;
+        if (reserveCount != 0) {
+            for (int i = 0; i <= temporary.size() % 5; i++) {
+                Player reservePlayer = temporary.getLast();
+                reservePlayers.add(reservePlayer);
+                temporary.remove(reservePlayer);
+            }
         }
 
         players.addAll(temporary);
@@ -330,6 +341,20 @@ public class MainController {
         populate(teamSeparationTable);
     }
 
+    @FXML
+    protected void onSetColumnsClick() throws IOException {
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("column-selector.fxml"));
+        Parent mainWindow = (Parent) fxmlLoader.load();
+        Stage stage = new Stage();
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.initStyle(StageStyle.DECORATED);
+        stage.setTitle("Elo optimizer");
+        stage.setScene(new Scene(mainWindow));
+        ColumnSelectorController controller = fxmlLoader.getController();
+        controller.populateBoxes(FXCollections.observableList(getHeaderNames(new FileInputStream(inputFile))));
+        stage.show();
+    }
+
     private void populate(TableView table) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("player-picker.fxml"));
         Parent mainWindow = (Parent) fxmlLoader.load();
@@ -343,7 +368,6 @@ public class MainController {
         table.setVisible(true);
         controller.populateBoxes(playerTable.getItems(), table);
     }
-
 
     protected void addToTable(TableView table, PlayerInputData item, PlayerInputData item2) {
         PlayerConnection connection = PlayerConnection.builder()

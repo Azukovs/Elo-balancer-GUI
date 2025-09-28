@@ -1,5 +1,6 @@
 package elo.elo_gui.calculations.dtos;
 
+import elo.elo_gui.MainController;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -28,7 +29,9 @@ public class Player implements Comparable<Player> {
 
     @Override
     public String toString() {
-        return discordName + "(" + currentFaceit + ") ";
+        int currentLongestName = MainController.longestName == 0 ? 20 : MainController.longestName;
+        String namePattern = "%1$" + currentLongestName + "s" + "(%2$4s)";
+        return String.format(namePattern, discordName, currentFaceit);
     }
 
     public void addTeammate(Player teammate) {
