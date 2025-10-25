@@ -18,6 +18,7 @@ public class Player implements Comparable<Player> {
     private final int maxFaceit;
     private List<Player> teammates;
     private List<Player> adversaries;
+    private boolean hasTeammates;
 
     @Override
     public int compareTo(Player secondPlayer) {
@@ -39,6 +40,7 @@ public class Player implements Comparable<Player> {
             teammates = new ArrayList<>();
         }
         teammates.add(teammate);
+        hasTeammates = true;
     }
 
     public void addAdversary(Player adversary) {

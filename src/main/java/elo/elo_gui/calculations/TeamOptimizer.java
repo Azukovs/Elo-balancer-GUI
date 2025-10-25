@@ -22,17 +22,27 @@ public class TeamOptimizer {
 
     // Greedy initialization: assign highest rated players to lowest scoring team
     static List<Team> greedyInitialize(List<Player> players, int teamSize) {
-        int teamNumber = players.size() / teamSize;
+        List<Player> playersCopy = new ArrayList<>(players);
+        int teamNumber = playersCopy.size() / teamSize;
         List<Team> teams = new ArrayList<>();
         for (int i = 0; i < teamNumber; i++) {
             teams.add(new Team());
         }
 
-        players.sort(comparingInt((Player player) -> -player.getCurrentFaceit())
-                .thenComparingInt(player -> -player.getCurrentPremiere()));
+        List<Player> playersWithTeammates = new ArrayList<>();
+        playersCopy.forEach(player -> {
+            if (player.isHasTeammates()) {
+                playersWithTeammates.add(player);
+            }
+        });
+        playersCopy.removeAll(playersWithTeammates);
 
+        playersCopy.sort(comparingInt((Player player) -> -player.getCurrentFaceit()).thenComparingInt(player -> -player.getCurrentPremiere()));
+        playersWithTeammates.sort(comparingInt((Player player) -> -player.getCurrentFaceit()).thenComparingInt(player -> -player.getCurrentPremiere()));
+
+        //First add only players with defined teammates while teams are empty
         List<Player> teammates = new ArrayList<>();
-        for (Player player : players) {
+        for (Player player : playersWithTeammates) {
             if (teammates.contains(player)) {
                 continue;
             }
@@ -47,6 +57,13 @@ public class TeamOptimizer {
                 currentPlayerTeammates.forEach(bestTeam::addPlayer);
             }
 
+            bestTeam.addPlayer(player);
+        }
+        for (Player player : playersCopy) {
+            Team bestTeam = teams.stream()
+                    .filter(team -> team.players.size() < teamSize)
+                    .min(comparingInt(Team::totalFaceit))
+                    .orElseThrow();
             bestTeam.addPlayer(player);
         }
 
