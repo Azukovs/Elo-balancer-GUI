@@ -11,4 +11,6 @@ module elo.elo_gui {
     opens elo.elo_gui.calculations to javafx.fxml;
     opens elo.elo_gui.calculations.dtos to javafx.base;
     exports elo.elo_gui;
+    exports elo.elo_gui.controllers;
+    opens elo.elo_gui.controllers to javafx.fxml;
 }

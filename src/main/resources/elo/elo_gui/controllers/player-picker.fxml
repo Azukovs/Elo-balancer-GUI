@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane prefHeight="175.0" prefWidth="350.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="elo.elo_gui.controllers.PlayerPickerController">
+    <children>
+        <VBox layoutX="14.0" layoutY="14.0">
+            <children>
+                <HBox alignment="CENTER" prefHeight="50.0" prefWidth="300.0">
+                    <children>
+                        <Label maxHeight="30.0" maxWidth="150.0" minHeight="30.0" minWidth="150.0" prefHeight="30.0" prefWidth="150.0" text="Select first player" />
+                        <ComboBox fx:id="player1Box" maxHeight="30.0" maxWidth="150.0" minHeight="30.0" minWidth="150.0" prefHeight="30.0" prefWidth="150.0" />
+                    </children>
+                </HBox>
+                <HBox alignment="CENTER" prefHeight="50.0" prefWidth="300.0">
+                    <children>
+                        <Label maxHeight="30.0" maxWidth="150.0" minHeight="30.0" minWidth="150.0" prefHeight="30.0" prefWidth="150.0" text="Select second player" />
+                        <ComboBox fx:id="player2Box" maxHeight="30.0" maxWidth="150.0" minHeight="30.0" minWidth="150.0" prefHeight="30.0" prefWidth="150.0" />
+                    </children>
+                </HBox>
+                <HBox alignment="CENTER_RIGHT" prefHeight="50.0" prefWidth="300.0">
+                    <children>
+                        <Button fx:id="confirmButton" maxHeight="30.0" maxWidth="150.0" minHeight="30.0" minWidth="150.0" mnemonicParsing="false" onAction="#confirmSelection" prefHeight="30.0" prefWidth="150.0" text="Confirm!" />
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </children>
+</AnchorPane>

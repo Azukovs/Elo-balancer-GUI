@@ -1,6 +1,6 @@
 package elo.elo_gui.calculations.dtos;
 
-import elo.elo_gui.MainController;
+import elo.elo_gui.controllers.MainController;
 import lombok.Builder;
 import lombok.Getter;
 

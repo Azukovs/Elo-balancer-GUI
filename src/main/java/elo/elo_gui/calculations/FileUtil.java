@@ -1,5 +1,6 @@
 package elo.elo_gui.calculations;
 
+import elo.elo_gui.EloApplication;
 import elo.elo_gui.calculations.dtos.Player;
 import elo.elo_gui.calculations.dtos.PlayerInputData;
 import elo.elo_gui.calculations.dtos.Team;
@@ -25,7 +26,7 @@ import static elo.elo_gui.calculations.TeamOptimizer.scoreTeams;
 public class FileUtil {
     public static Map<String, Integer> headerMap = new HashMap<>();
     public static String nameColumnHeader = "Discord Nickname";
-    public static String eloColumnHeader = "Faceit Elo";
+    public static String eloColumnHeader = "Faceit Elo  (Pilnus ciparus bez komentāriem un komatiem)";
 
     public static List<String> getHeaderNames(FileInputStream input) {
         List<String> headers = new ArrayList<>();
@@ -71,6 +72,11 @@ public class FileUtil {
                 currentFaceitEloIndex = index;
             }
             index++;
+        }
+
+        if (dcNameIndex < 0 || currentFaceitEloIndex < 0) {
+            EloApplication.showError("Wrong columns, select manually");
+            return -1;
         }
 
         int rowIndex = 0;
