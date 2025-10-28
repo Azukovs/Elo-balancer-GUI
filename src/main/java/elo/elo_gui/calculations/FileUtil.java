@@ -11,16 +11,13 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static elo.elo_gui.calculations.TeamName.getByNumber;
 import static elo.elo_gui.calculations.TeamOptimizer.scoreTeams;
 
 public class FileUtil {
@@ -108,35 +105,19 @@ public class FileUtil {
         return longestName;
     }
 
-    public static String outputTeams(List<List<Team>> potentialTeams, List<Player> reserve, int outputNumber) {
-        StringBuilder outputData = new StringBuilder();
-        String teamPattern = "%1$8s";
+    public static String outputTeams(List<List<Team>> potentialTeams, List<Player> reserve) {
+        StringBuilder outputDataToApp = new StringBuilder();
 
-        try (FileWriter outputWriter = new FileWriter("teams.txt")) {
-            File output = new File("teams.txt");
-            for (int i = 0; i < outputNumber; i++) {
-                List<Team> option = potentialTeams.get(i);
-                int faceitDiff = scoreTeams(option);
-                outputWriter.write("\nOptimized Teams (Faceit diff = " + faceitDiff + "):\n");
-                outputData.append("\nOptimized Teams (Faceit diff = ").append(faceitDiff).append("):\n");
-                int num = 1;
-                for (Team team : option) {
-                    outputWriter.write(String.format(teamPattern, getByNumber(num)) + team.toString() + "\n");
-                    outputData.append(String.format(teamPattern, getByNumber(num))).append(team).append("\n");
-                    num++;
-                }
-            }
-
-            outputWriter.write("\nReserve players:\n");
-            outputData.append("\nReserve players:\n");
-            for (Player player : reserve) {
-                outputWriter.write("* " + player.toString() + "\n");
-                outputData.append("* ").append(player).append("\n");
-            }
-            System.out.println("Backup saved:" + output.getAbsolutePath());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        List<Team> option = potentialTeams.get(0);
+        int faceitDiff = scoreTeams(option);
+        outputDataToApp.append("Optimized Teams (Max diff of average faceit elo = ").append(faceitDiff).append("):\n");
+        for (Team team : option) {
+            outputDataToApp.append("\n").append(team).append("\n");
         }
-        return outputData.toString();
+        outputDataToApp.append("\n").append("Reserve players:\n");
+        for (Player player : reserve) {
+            outputDataToApp.append("@").append(player).append("\n");
+        }
+        return outputDataToApp.toString();
     }
 }

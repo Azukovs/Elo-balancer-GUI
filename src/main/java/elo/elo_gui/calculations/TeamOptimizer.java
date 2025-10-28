@@ -14,8 +14,8 @@ public class TeamOptimizer {
 
     public static List<Team> calculateSingle(List<Player> players, int iterations) {
         List<Team> initialTeams = greedyInitialize(players, TEAM_SIZE);
-        System.out.println();
         List<Team> optimized = optimize(initialTeams, iterations);
+        Team.teamCounter = 1;
         optimized.sort(comparingInt(Team::totalFaceit));
         return optimized;
     }
@@ -75,7 +75,7 @@ public class TeamOptimizer {
         int min = Integer.MAX_VALUE;
         int max = Integer.MIN_VALUE;
         for (Team t : teams) {
-            int score = t.totalFaceit();
+            int score = t.getAverageFaceitElo();
             min = Math.min(min, score);
             max = Math.max(max, score);
         }
@@ -150,6 +150,14 @@ public class TeamOptimizer {
             newTeam.players = new ArrayList<>(t.players);
             newTeam.faceitEloSum = t.faceitEloSum;
             newTeam.premiereEloSum = t.premiereEloSum;
+            newTeam.averageFaceitElo = t.averageFaceitElo;
+            newTeam.teamName = t.teamName;
+            newTeam.teamIcon = t.teamIcon;
+            newTeam.player1 = t.player1;
+            newTeam.player2 = t.player2;
+            newTeam.player3 = t.player3;
+            newTeam.player4 = t.player4;
+            newTeam.player5 = t.player5;
             copy.add(newTeam);
         }
         return copy;

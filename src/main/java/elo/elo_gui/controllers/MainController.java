@@ -6,6 +6,8 @@ import elo.elo_gui.calculations.dtos.PlayerConnection;
 import elo.elo_gui.calculations.dtos.PlayerInputData;
 import elo.elo_gui.calculations.dtos.Team;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -25,11 +27,12 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -41,6 +44,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,7 +88,29 @@ public class MainController {
     @FXML
     private TextArea outputTextArea;
     @FXML
-    private TextArea errorTextArea;
+    private TextArea infoTextArea;
+    @FXML
+    private TableView<Team> outputTable;
+    @FXML
+    private TableColumn<Team, String> teamName;
+    @FXML
+    private TableColumn<Team, String> teamIcon;
+    @FXML
+    private TableColumn<Team, Integer> averageElo;
+    @FXML
+    private TableColumn<Team, Player> player1;
+    @FXML
+    private TableColumn<Team, Player> player2;
+    @FXML
+    private TableColumn<Team, Player> player3;
+    @FXML
+    private TableColumn<Team, Player> player4;
+    @FXML
+    private TableColumn<Team, Player> player5;
+    @FXML
+    private Button copyToClipboard;
+    @FXML
+    private TextArea hiddenField;
     @FXML
     private ProgressBar progressBar;
     @FXML
@@ -126,6 +152,7 @@ public class MainController {
             PlayerInputData.counterTotal = 0;
             addTeammatesButton.setDisable(true);
             addTeamSeparationButton.setDisable(true);
+            onLoadPlayersClick();
         } else {
             loadPlayersButton.setDisable(true);
             loadedFile.setText("");
@@ -194,6 +221,7 @@ public class MainController {
         playersInputData.forEach(player -> {
             playerTable.getItems().add(player);
         });
+        onCheckTableClick();
     }
 
     @FXML
@@ -221,9 +249,9 @@ public class MainController {
     protected void onGenerateTeamsClick() {
         System.out.println("Clicked generate");
         outputTextArea.setText("");
-        outputTextArea.setFont(Font.font("Courier New", 12.0));
         players.clear();
         reserve.clear();
+        outputTable.setItems(FXCollections.observableList(new ArrayList<>()));
         progressBar.setProgress(0.0);
         List<Player> temporary = new ArrayList<>();
         ObservableList<PlayerInputData> items = playerTable.getItems();
@@ -306,24 +334,69 @@ public class MainController {
             protected String call() {
                 List<List<Team>> potentialTeams = new ArrayList<>();
                 double progressValue;
-                int optionCounter = parseInt(optionCountTextField.getText());
-                int iterationCounter = parseInt(iterationCountTextField.getText()) * 1000000;
-                for (int i = 0; i < optionCounter; i++) {
+                int iterationCounter = parseInt(iterationCountTextField.getText()) * 100000;
+                for (int i = 0; i < 10; i++) {
                     List<Team> temp = TeamOptimizer.calculateSingle(players, iterationCounter);
                     potentialTeams.add(temp);
-                    progressValue = (double) (i + 1) / optionCounter;
+                    progressValue = (double) (i + 1) / 10;
                     double finalProgressValue = progressValue;
                     Platform.runLater(() -> progressBar.setProgress(finalProgressValue));
                 }
                 potentialTeams.sort(comparingInt(TeamOptimizer::scoreTeams));
-                String sortedTeams = outputTeams(potentialTeams, reserve, optionCounter);
+                String sortedTeams = outputTeams(potentialTeams, reserve);
 
-                outputTextArea.setText(sortedTeams);
+                List<Team> finalTeam = potentialTeams.get(0);
+                finalTeam.sort(Comparator.comparing(Team::getTeamName));
+                for (Team team : finalTeam) {
+                    outputTable.getItems().add(team);
+                }
+
+                List<String> outputLineList = new ArrayList<>(sortedTeams.lines().toList());
+                StringBuilder outputBuilder = new StringBuilder();
+                outputBuilder.append(outputLineList.get(0)).append("\n");
+                outputLineList.remove(0);
+                boolean reserveFound = false;
+                for (String line : outputLineList) {
+                    if (line.contains("Reserve players")) {
+                        reserveFound = true;
+                    }
+                    if (reserveFound) {
+                        outputBuilder.append(line).append("\n");
+                    }
+                }
+
+                outputTextArea.setText(outputBuilder.toString());
+                hiddenField.setText(sortedTeams);
                 return null;
             }
         };
 
         new Thread(task).start();
+
+        StringProperty style = new SimpleStringProperty();
+        style.set("-fx-font-family: Consolas;");
+        outputTable.setRowFactory(tv -> {
+            TableRow row = new TableRow();
+            row.styleProperty().bind(style);
+            return row;
+        });
+
+        teamName.setCellValueFactory(new PropertyValueFactory<>("teamName"));
+        teamIcon.setCellValueFactory(new PropertyValueFactory<>("teamIcon"));
+        averageElo.setCellValueFactory(new PropertyValueFactory<>("averageFaceitElo"));
+        player1.setCellValueFactory(new PropertyValueFactory<>("player1"));
+        player2.setCellValueFactory(new PropertyValueFactory<>("player2"));
+        player3.setCellValueFactory(new PropertyValueFactory<>("player3"));
+        player4.setCellValueFactory(new PropertyValueFactory<>("player4"));
+        player5.setCellValueFactory(new PropertyValueFactory<>("player5"));
+    }
+
+    @FXML
+    protected void onCopyToClipboard() {
+        Clipboard clipboard = Clipboard.getSystemClipboard();
+        ClipboardContent content = new ClipboardContent();
+        content.putString(hiddenField.getText());
+        clipboard.setContent(content);
     }
 
     @FXML
@@ -382,7 +455,7 @@ public class MainController {
         Task<String> task = new Task<>() {
             @Override
             protected String call() {
-                errorTextArea.setText(errorMessage);
+                infoTextArea.setText(errorMessage);
                 return null;
             }
         };

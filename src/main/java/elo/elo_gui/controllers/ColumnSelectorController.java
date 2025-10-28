@@ -7,6 +7,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.stage.Stage;
 
+import static elo.elo_gui.EloApplication.loader;
+
 public class ColumnSelectorController {
     @FXML
     private ComboBox<String> nameColumnBox;
@@ -25,6 +27,8 @@ public class ColumnSelectorController {
 
         Stage stage = (Stage) confirmButton.getScene().getWindow();
         stage.close();
+        MainController controller = loader.getController();
+        controller.onLoadPlayersClick();
     }
 
     public void populateBoxes(ObservableList<String> headers) {

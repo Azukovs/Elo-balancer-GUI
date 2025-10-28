@@ -13,6 +13,7 @@ public class EloApplication extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
+        System.setProperty("glass.disableThreadChecks", "true");
         if (loader == null) {
             loader = new FXMLLoader(EloApplication.class.getResource("controllers/main-window.fxml"));
         }
